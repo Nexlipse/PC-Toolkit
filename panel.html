@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC Toolkit Panel</title>
+<style>
+  :root {
+    --bg: #101317; --permukaan: #171b21; --permukaan2: #1e242c; --garis: #2b323c;
+    --teks: #e4e8ee; --redup: #98a2b3; --aksen: #6aa84f; --bahaya: #cc5c4a;
+    --r: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--teks); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+  .bungkus { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
+
+  header { border-bottom: 1px solid var(--garis); background: #0d1014; position: sticky; top: 0; z-index: 20; }
+  .baris-atas { max-width: 1180px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+  header h1 b { color: var(--aksen); font-weight: 600; }
+  .meta { color: var(--redup); font-size: 12.5px; margin-left: auto; display: flex; gap: 16px; align-items: center; }
+  .segarkan { background: none; border: 1px solid var(--garis); color: var(--redup); border-radius: var(--r); padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .segarkan:hover { color: var(--teks); border-color: #3d4652; }
+
+  . enrolment { margin: 24px 0 0; padding: 16px 18px; background: var(--permukaan); border: 1px solid var(--garis); border-radius: var(--r); }
+  .kode-veu { font-family: Consolas, monospace; font-size: 19px; letter-spacing: .06em; color: var(--aksen); user-select: all; }
+  .baris { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .ket { color: var(--redup); font-size: 12.5px; }
+
+  .grup { margin: 26px 0 10px; display: flex; align-items: center; gap: 12px; }
+  .grup h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--redup); }
+  .grup .garis { flex: 1; height: 1px; background: var(--garis); }
+
+  .klien { background: var(--permukaan); border: 1px solid var(--garis); border-radius: var(--r); margin-bottom: 10px; overflow: hidden; }
+  .klien.offline { opacity: .62; }
+  .kepala-klien { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; }
+  .kepala-klien:hover { background: var(--permukaan2); }
+  .titik { width: 8px; height: 8px; border-radius: 50%; background: #4a5361; flex: none; }
+  .titik.hidup { background: var(--aksen); }
+  .nama { font-weight: 600; }
+  .nama span { color: var(--redup); font-weight: 400; font-size: 12.5px; margin-left: 8px; }
+  .kanan { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--redup); }
+  .tanda { padding: 2px 8px; border-radius: 3px; font-size: 11.5px; font-weight: 600; }
+  .tanda.aksen { background: rgba(106,168,79,.15); color: var(--aksen); }
+  .tanda.bahaya { background: rgba(204,92,74,.15); color: var(--bahaya); }
+  .tanda.netral { background: rgba(152,162,179,.13); color: var(--redup); }
+  .panah { color: var(--redup); font-size: 11px; width: 12px; }
+
+  .isi-klien { padding: 0 16px 16px; border-top: 1px solid var(--garis); }
+  .fakta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 20px; padding: 14px 0; }
+  .fakta div { font-size: 12.5px; }
+  .fakta dt { color: var(--redup); font-size: 11.5px; margin-bottom: 2px; }
+  .fakta dd { overflow-wrap: anywhere; }
+
+  .aksi { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 0; border-top: 1px solid var(--garis); }
+  .aksi button { background: var(--permukaan2); border: 1px solid var(--garis); color: var(--teks); padding: 5px 11px; border-radius: 4px; cursor: pointer; font-size: 12.5px; }
+  .aksi button:hover:not(:disabled) { border-color: #46505d; }
+  .aksi button:disabled { opacity: .4; cursor: not-allowed; }
+  .aksi button.bahaya { border-color: #5b3630; color: #e2a196; }
+  .aksi button.bahaya:hover:not(:disabled) { background: rgba(204,92,74,.12); }
+
+  textarea { width: 100%; min-height: 72px; background: #0c0e11; border: 1px solid var(--garis); color: var(--teks); border-radius: 4px; padding: 8px 10px; font-family: Consolas, monospace; font-size: 12.5px; resize: vertical; }
+  .area-aksi { padding: 12px 0; border-top: 1px solid var(--garis); }
+  .area-aksi label { display: block; font-size: 12.5px; color: var(--redup); margin-bottom: 6px; }
+
+  .hasil { margin-top: 12px; }
+  .hasil pre { background: #0c0e11; border: 1px solid var(--garis); border-radius: 4px; padding: 10px 12px; font-size: 12px; font-family: Consolas, monospace; overflow: auto; max-height: 320px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .riwayat { margin-top: 10px; }
+  .riwayat-item { display: flex; gap: 10px; font-size: 12.5px; padding: 5px 0; border-top: 1px solid var(--garis); align-items: baseline; }
+  .riwayat-item .waktu { color: var(--redup); font-size: 11.5px; white-space: nowrap; }
+  .kosong { color: var(--redup); font-size: 13px; padding: 40px 0; text-align: center; }
+  .galat { background: rgba(204,92,74,.1); border: 1px solid #5b3630; color: #e2a196; border-radius: 4px; padding: 10px 12px; font-size: 12.5px; margin: 12px 0; }
+  .sembunyi { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="baris-atas">
+    <h1>PC Toolkit <b>Panel</b></h1>
+    <div class="meta">
+      <span id="ringkas">memuat…</span>
+      <button class="segarkan" id="btn-muat">Muat ulang</button>
+    </div>
+  </div>
+</header>
+
+<div class="bungkus">
+  <div class="enrolment">
+    <div class="baris">
+      <div>
+        <div class="ket">Kode enroll — Giving this to one PC</div>
+        <div class="kode-veu" id="kode">—</div>
+      </div>
+      <div style="margin-left:auto" class="baris">
+        <button class="segarkan" id="btn-salin">Salin</button>
+        <button class="segarkan" id="btn-kode-baru">Kode baru</button>
+      </div>
+    </div>
+    <div class="ket" style="margin-top:8px">
+      Di PC client: <code>powershell -ExecutionPolicy Bypass -File agent.ps1 -Server "http://ALAMAT:5700" -Code KODE</code>
+    </div>
+  </div>
+
+  <div id="galat-utama"></div>
+  <div id="daftar"></div>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+let state = { tasks: [], clients: [], enrollCode: null };
+const buka = new Set();
+
+const fmt = (b) => {
+  if (b == null) return '–';
+  b = Number(b) || 0;
+  if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+  if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+  if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+  return b + ' B';
+};
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const waktu = (iso) => {
+  if (!iso) return '–';
+  const d = new Date(iso);
+  return isNaN(d) ? '–' : d.toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+};
+const sejak = (iso) => {
+  if (!iso) return 'belum pernah';
+  const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return s + ' detik lalu';
+  if (s < 3600) return Math.round(s / 60) + ' menit lalu';
+  if (s < 86400) return Math.round(s / 3600) + ' jam lalu';
+  return Math.round(s / 86400) + ' hari lalu';
+};
+
+async function api(path, opts) {
+  const r = await fetch(path, Object.assign({ credentials: 'same-origin' }, opts));
+  const j = await r.json().catch(() => ({ error: 'Respons server bukan JSON' }));
+  if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+}
+
+function tampilGalat(pesan) {
+  $('galat-utama').innerHTML = pesan ? '<div class="galat">' + esc(pesan) + '</div>' : '';
+}
+
+function faktaKlien(c) {
+  const m = c.meta || {};
+  const kartu = [
+    ['Sistem', m.os || '—'],
+    ['User', m.user || '—'],
+    ['Build', m.build || '—'],
+    ['CPU', m.cpu || '—'],
+    ['Hak akses', m.isAdmin ? 'Administrator' : 'User biasa'],
+    ['Baterai', m.batteryPct == null ? 'tidak ada' : m.batteryPct + '%'],
+    ['Engine', m.engineMtime ? new Date(m.engineMtime).toLocaleDateString('id-ID') : '—']
+  ];
+  return '<dl class="fakta">' + kartu.map(([k, v]) =>
+    '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join('') + '</dl>';
+}
+
+function areaAksi(c, t) {
+  if (t.needsInput) {
+    const label = t.task === 'delete-leftover'
+      ? 'Satu path per baris. Awalan <code>REG::</code> untuk entri registry. Pindai dulu supaya tahu apa yang ada.'
+      : 'Satu target per baris, format <code>Reg|keyPath|valueName</code> atau <code>File|path</code>. Ambil dari Daftar aplikasi startup.';
+    return '<div class="area-aksi"><label>' + label + '</label>' +
+      '<textarea data-input="' + t.task + '" data-client="' + c.id + '"></textarea></div>';
+  }
+  if (t.needsGuid) {
+    return '<div class="area-aksi"><label>Isi kolom GUID di bawah hasil <b>Daftar skema daya</b>, lalu klik lagi task ini.</label>' +
+      '<textarea data-input="set-power" data-client="' + c.id + '" placeholder="77691e83-9e5e-4d1a-b96a-f6d1a5a0a5a4"></textarea></div>';
+  }
+  return '';
+}
+
+function kartuKlien(c) {
+  const tanda = c.running
+    ? '<span class="tanda aksen">jalan</span>'
+    : (c.queued ? '<span class="tanda netral">' + c.queued + ' antre</span>' : '');
+  const aksi = state.tasks.map((t) =>
+    '<button data-client="' + c.id + '" data-task="' + t.task + '"' + (t.risky ? ' class="bahaya"' : '') +
+    (c.online ? '' : ' disabled') + '>' + esc(t.label) + '</button>').join('');
+
+  const riwayat = (c.history || []).length
+    ? '<div class="riwayat">' + c.history.map((h) =>
+        '<div class="riwayat-item"><span class="waktu">' + waktu(h.at) + '</span>' +
+        '<span>' + (h.ok ? 'selesai' : 'gagal') + ' · ' + esc(h.task) + '</span>' +
+        (h.ms != null ? '<span class="ket" style="margin-left:auto">' + (h.ms / 1000).toFixed(1) + 's</span>' : '') +
+        '</div>').join('') + '</div>'
+    : '';
+
+  return '<div class="klien' + (c.online ? '' : ' offline') + '" data-row="' + c.id + '">' +
+    '<div class="kepala-klien" data-toggle="' + c.id + '">' +
+      '<span class="titik' + (c.online ? ' hidup' : '') + '"></span>' +
+      '<span class="nama">' + esc(c.name) + '<span>' + esc((c.meta && c.meta.os) || 'Windows') + '</span></span>' +
+      '<span class="kanan">' + tanda + '<span>' + sejak(c.lastSeen) + '</span><span class="panah">' + (buka.has(c.id) ? '▲' : '▼') + '</span></span>' +
+    '</div>' +
+    '<div class="isi-klien' + (buka.has(c.id) ? '' : ' sembunyi') + '" data-body="' + c.id + '">' +
+      faktaKlien(c) +
+      '<div class="aksi">' + aksi + '</div>' +
+      state.tasks.filter((t) => t.needsInput || t.needsGuid).map((t) => areaAksi(c, t)).join('') +
+      '<div class="hasil" data-hasil="' + c.id + '"></div>' + riwayat +
+    '</div></div>';
+}
+
+function render() {
+  $('kode').textContent = state.enrollCode || '(tidak ada — buat kode baru)';
+  const hidup = state.clients.filter((c) => c.online).length;
+  $('ringkas').textContent = state.clients.length + ' client · ' + hidup + ' online';
+
+  $('daftar').innerHTML = state.clients.length
+    ? state.clients.map(kartuKlien).join('')
+    : '<div class="kosong">Belum ada client terdaftar.<br>Berikan kode enroll di atas ke satu PC, lalu jalankan agent.ps1 di PC itu.</div>';
+}
+
+async function muat() {
+  try {
+    state = await api('/api/state');
+    tampilGalat('');
+    render();
+  } catch (e) {
+    tampilGalat('Gagal memuat panel: ' + e.message);
+  }
+}
+
+document.addEventListener('click', async (ev) => {
+  const tog = ev.target.closest('[data-toggle]');
+  if (tog) {
+    const id = tog.dataset.toggle;
+    if (buka.has(id)) buka.delete(id); else buka.add(id);
+    const body = document.querySelector('[data-body="' + id + '"]');
+    const panah = tog.querySelector('.panah');
+    if (body) body.classList.toggle('sembunyi');
+    if (panah) panah.textContent = buka.has(id) ? '▲' : '▼';
+    return;
+  }
+
+  const btn = ev.target.closest('button[data-task]');
+  if (btn) {
+    const id = btn.dataset.client, task = btn.dataset.task;
+    const meta = state.tasks.find((t) => t.task === task) || {};
+    let stdin = '';
+    const kotak = document.querySelector('textarea[data-input="' + task + '"][data-client="' + id + '"]');
+    if (kotak) stdin = kotak.value.trim();
+
+    if (meta.risky && !confirm('Task "' + meta.label + '" mengubah sistem client ' + id + '.\nLanjutkan?')) return;
+    btn.disabled = true;
+    try {
+      await api('/api/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta.needsGuid
+          ? { clientId: id, task: task, guid: stdin }
+          : { clientId: id, task: task, stdin: stdin })
+      });
+      await muat();
+    } catch (e) {
+      tampilGalat('Gagal mengirim task: ' + e.message);
+      btn.disabled = false;
+    }
+  }
+});
+
+$('btn-muat').addEventListener('click', muat);
+$('btn-salin').addEventListener('click', () => {
+  const t = state.enrollCode || '';
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(() => { $('btn-salin').textContent = 'Tersalin'; setTimeout(() => { $('btn-salin').textContent = 'Salin'; }, 1400); });
+});
+$('btn-kode-baru').addEventListener('click', async () => {
+  if (!confirm('Kode lama langsungHangus. Client yang belum daftar jadi tidak bisa masuk. Lanjut?')) return;
+  try {
+    const j = await api('/api/new-code', { method: 'POST' });
+    state.enrollCode = j.enrollCode;
+    render();
+  } catch (e) { tampilGalat('Gagal membuat kode: ' + e.message); }
+});
+
+muat();
+setInterval(muat, 6000);
+</script>
+</body>
+</html>

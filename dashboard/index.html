@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC Toolkit Dashboard</title>
+<style>
+  :root {
+    --bg: #12151c; --kartu: #1a1f29; --kartu2: #232936; --line: #2e3646;
+    --teks: #e9edf4; --redup: #97a2b5; --hijau: #3ec98a; --kuning: #e8b13a;
+    --merah: #ef6a6a; --aksen: #5b9cf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--teks); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; line-height: 1.45; }
+  .kepala { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--line); background: #171b23; position: sticky; top: 0; z-index: 10; }
+  .kepala h1 { font-size: 17px; font-weight: 600; }
+  .kepala h1 span { color: var(--redup); font-weight: 400; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--redup); white-space: nowrap; }
+  .badge.admin { color: var(--hijau); border-color: var(--hijau); }
+  .badge.gagal { color: var(--merah); border-color: var(--merah); }
+  .isi { max-width: 1140px; margin: 0 auto; padding: 20px 18px 56px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .kartu { display: flex; flex-direction: column; background: var(--kartu); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .judul-k { font-size: 14px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex: none; }
+  /* Area data: panjangnya dibatasi supaya kartu dalam satu baris sama tinggi,
+     data yang melebihi digulir di dalam kartu, bukan bikin halaman memanjang. */
+  .gulir { flex: 1 1 0; min-height: 120px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #3b4356 transparent; padding-right: 4px; }
+  .gulir::-webkit-scrollbar { width: 9px; }
+  .gulir::-webkit-scrollbar-thumb { background: #3b4356; border-radius: 99px; }
+  .gulir::-webkit-scrollbar-thumb:hover { background: #4c5871; }
+  .gulir::-webkit-scrollbar-track { background: transparent; }
+  .ikon { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; background: var(--kartu2); flex: none; }
+  .judul-k .sisip { margin-left: auto; font-size: 11px; color: var(--redup); font-weight: 400; }
+  .tombol { background: var(--kartu2); border: 1px solid var(--line); color: var(--teks); padding: 7px 13px; border-radius: 7px; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .tombol:hover:not(:disabled) { border-color: var(--aksen); color: var(--aksen); }
+  .tombol.utama { background: #2456b8; border-color: #2456b8; color: #fff; }
+  .tombol.utama:hover:not(:disabled) { background: #1b4496; border-color: #1b4496; color: #fff; }
+  .tombol.merah { border-color: #6d2a2a; color: var(--merah); }
+  .tombol:disabled { opacity: .45; cursor: not-allowed; }
+  .tombol:focus-visible, .pilih:focus-within, input:focus-visible { outline: 2px solid var(--aksen); outline-offset: 2px; }
+  .aksi { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; flex: none; }
+  .baris { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .baris:last-child { border-bottom: none; }
+  .baris > :first-child { min-width: 0; overflow-wrap: anywhere; }
+  .nilai { color: var(--redup); font-size: 12px; text-align: right; max-width: 55%; overflow-wrap: anywhere; }
+  .pilih { display: flex; gap: 8px; align-items: baseline; flex: 1; cursor: pointer; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .pilih:last-of-type { border-bottom: none; }
+  .pilih input { flex: none; margin-top: 3px; accent-color: var(--aksen); }
+  .pill { padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .pill.hijau { background: rgba(62,201,138,.14); color: var(--hijau); }
+  .pill.kuning { background: rgba(232,177,58,.14); color: var(--kuning); }
+  .pill.merah { background: rgba(239,106,106,.14); color: var(--merah); }
+  .status { font-size: 12.5px; margin-top: 10px; min-height: 18px; color: var(--redup); flex: none; }
+  .status.gagal { color: var(--merah); }
+  .status.oke { color: var(--hijau); }
+  .info { font-size: 12px; color: var(--redup); margin-top: 8px; flex: none; }
+  .kosong { color: var(--redup); font-size: 13px; padding: 8px 0; }
+  .loader { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--aksen); border-top-color: transparent; border-radius: 50%; animation: putar .8s linear infinite; vertical-align: -1px; margin-right: 6px; }
+  @keyframes putar { to { transform: rotate(360deg); } }
+  .foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--redup); font-size: 12px; }
+  .foot .tombol { padding: 6px 12px; font-size: 12px; }
+  .meter { height: 6px; background: var(--kartu2); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .meter > div { height: 100%; background: var(--hijau); border-radius: 99px; transition: width .6s; }
+  @media (max-width: 560px) {
+    .kepala { padding: 12px 14px; }
+    .isi { padding: 16px 12px 44px; }
+    .kartu { padding: 12px 13px; }
+    .gulir { max-height: 240px; }
+  }
+</style>
+</head>
+<body>
+  <div class="kepala">
+    <h1>PC Toolkit <span>Dashboard</span></h1>
+    <div class="badge" id="badge-mode">memuat…</div>
+  </div>
+
+  <div class="isi">
+    <div class="grid">
+
+      <!-- 1. BERSIHKAN CACHE -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🧹</span>Bersihkan Cache &amp; File Sampah</div>
+        <div id="junk-ringkas" class="info">Menghitung ukuran sampah…</div>
+        <div id="junk-list" class="gulir"></div>
+        <div class="status" id="junk-status"></div>
+        <div class="aksi"><button class="tombol utama" id="btn-junk">Bersihkan Sekarang</button></div>
+      </div>
+
+      <!-- 2. BATERAI -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🔋</span>Kesehatan Baterai</div>
+        <div id="isi-baterai" class="kosong gulir">Memuat…</div>
+      </div>
+
+      <!-- 3. SSD -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">💾</span>Kesehatan SSD / HDD</div>
+        <div id="isi-disk" class="kosong gulir">Memuat…</div>
+      </div>
+
+      <!-- 4. RINGKASAN -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🖥️</span>Ringkasan Sistem</div>
+        <div id="isi-summary" class="kosong gulir">Memuat…</div>
+      </div>
+
+      <!-- 5. SUHU CPU -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🌡️</span>Suhu &amp; Beban CPU <span class="sisip">auto 5 dtk</span></div>
+        <div id="isi-cpu" class="kosong gulir">Memuat…</div>
+      </div>
+
+      <!-- 6. BROWSER -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🌐</span>Cache Browser</div>
+        <div class="info">Cache browser yang sedang dipakai tidak bisa dihapus. Tutup Chrome, Edge, dan Firefox dulu.</div>
+        <div class="status" id="browser-status"></div>
+        <div class="aksi"><button class="tombol utama" id="btn-browser">Bersihkan Cache Browser</button></div>
+      </div>
+
+      <!-- 7. STARTUP -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">🚀</span>Aplikasi Startup <span class="sisip" id="jumlah-startup"></span></div>
+        <div class="info">Centang yang mau dimatikan. Yang paling lambat buka PC adalah kandidat utama. Item inti Windows sebaiknya dibiarkan.</div>
+        <div id="isi-startup" class="kosong gulir">Memuat…</div>
+        <div class="status" id="startup-status"></div>
+        <div class="aksi"><button class="tombol utama" id="btn-startup-del">Nonaktifkan Yang Dicentang</button></div>
+      </div>
+
+      <!-- 8. LEFTOVER -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">📦</span>Sisa Aplikasi (Leftover)</div>
+        <div class="info">Deteksi sisa folder aplikasi berbasis heuristik. Periksa ulang sebelum menghapus. Dihapus ke Recycle Bin agar bisa dikembalikan.</div>
+        <div id="isi-leftover" class="kosong gulir">Belum dipindai.</div>
+        <div class="status" id="leftover-status"></div>
+        <div class="aksi">
+          <button class="tombol" id="btn-leftover-scan">Pindai</button>
+          <button class="tombol utama" id="btn-leftover-del" disabled>Hapus Yang Dicentang</button>
+        </div>
+      </div>
+
+      <!-- 9. POWER PLAN -->
+      <div class="kartu">
+        <div class="judul-k"><span class="ikon">⚡</span>Skema Daya (Power Plan)</div>
+        <div id="isi-power" class="kosong gulir">Memuat…</div>
+        <div class="status" id="power-status"></div>
+      </div>
+
+    </div>
+
+    <div class="foot">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="tombol" id="btn-open-logs">Buka Folder Log &amp; Backup</button>
+        <button class="tombol merah" id="btn-stop">Hentikan Server</button>
+      </div>
+      <div>Log &amp; backup tersimpan di folder <code>logs\</code></div>
+    </div>
+  </div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const fmt = (b) => {
+  if (b == null) return '–';
+  b = Number(b) || 0;
+  if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+  if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+  if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+  return b + ' B';
+};
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pill = (teks, warna) => '<span class="pill ' + warna + '">' + esc(teks) + '</span>';
+const warnaSuhu = (c) => c >= 80 ? 'merah' : (c >= 60 ? 'kuning' : 'hijau');
+const set = (id, teks, cls) => { const e = $(id); if (cls) e.className = cls; e.textContent = teks; };
+const sibuk = (id, teks) => { $(id).innerHTML = '<span class="loader"></span>' + esc(teks); };
+const hasil = (id, teks, ok) => set(id, (ok ? 'Selesai. ' : 'Gagal. ') + teks, 'status ' + (ok ? 'oke' : 'gagal'));
+const konfirmasi = (pesan) => window.confirm(pesan + '\n\nTindakan ini tidak bisa dibatalkan setelah diproses.');
+const baris = (label, nilaiKanan) => '<div class="baris"><span>' + esc(label) + '</span><span class="nilai">' + nilaiKanan + '</span></div>';
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({ error: 'Respon tidak valid' }));
+  if (!r.ok || j.error) throw new Error(j.detail ? (j.error + ': ' + String(j.detail).slice(0, 300)) : (j.error || ('HTTP ' + r.status)));
+  return j;
+}
+
+/* ---------- mode admin ---------- */
+async function muatBadge() {
+  try {
+    const s = await api('/api/summary');
+    const admin = !!(s && s.isAdmin);
+    $('badge-mode').textContent = (s.computer || 'PC') + (admin ? ' · Administrator' : ' · User biasa');
+    $('badge-mode').className = 'badge' + (admin ? ' admin' : '');
+  } catch (e) {
+    $('badge-mode').textContent = 'engine tidak tersedia';
+    $('badge-mode').className = 'badge gagal';
+    $('badge-mode').title = e.message;
+  }
+}
+
+/* ---------- 1. junk ---------- */
+async function muatJunk() {
+  try {
+    const j = await api('/api/junk-size');
+    const items = j.items || [];
+    let total = 0;
+    $('junk-list').innerHTML = items.map(it => {
+      total += it.sizeBytes || 0;
+      const ket = it.status && it.status !== 'ok' ? ' ' + it.status : '';
+      return baris(it.name, fmt(it.sizeBytes) + (ket ? ' ' + esc(ket) : ''));
+    }).join('');
+    $('junk-list').scrollTop = 0;
+    $('junk-ringkas').textContent = 'Total sampah terdeteksi: ' + fmt(total) +
+      '. File yang dipakai sistem otomatis dilewati.';
+  } catch (e) {
+    $('junk-list').innerHTML = '';
+    set('junk-ringkas', 'Gagal menghitung ukuran sampah: ' + e.message, 'info');
+  }
+}
+$('btn-junk').addEventListener('click', async () => {
+  if (!konfirmasi('Bersihkan cache dan file sampah sekarang?')) return;
+  const b = $('btn-junk'); b.disabled = true;
+  sibuk('junk-status', 'Membersihkan (Recycle Bin dan cache DNS ikut dibersihkan)…');
+  try {
+    const j = await api('/api/clean-junk', { method: 'POST' });
+    let ket = 'Dibebaskan ' + fmt(j.freedBytes);
+    if (j.failedCount) ket += ' (' + j.failedCount + ' file terkunci dilewati)';
+    if (j.recycleBinCleaned) ket += ' · Recycle Bin dikosongkan';
+    if (j.dnsFlushed) ket += ' · cache DNS dibersihkan';
+    hasil('junk-status', ket, true);
+    muatJunk();
+  } catch (e) { hasil('junk-status', e.message, false); }
+  b.disabled = false;
+});
+
+/* ---------- 2. baterai ---------- */
+async function muatBaterai() {
+  sibuk('isi-baterai', 'Memeriksa…');
+  try {
+    const d = await api('/api/battery');
+    if (!d.present) {
+      set('isi-baterai', 'Tidak ada baterai terdeteksi. Kemungkinan PC desktop atau VM.', 'kosong');
+      return;
+    }
+    let html = baris('Daya saat ini', (d.percent ?? '–') + ' %');
+    html += baris('Status', esc(d.statusText || '–'));
+    if (d.healthPercent != null) {
+      const w = d.healthPercent < 50 ? 'merah' : (d.healthPercent < 80 ? 'kuning' : 'hijau');
+      html += baris('Kesehatan baterai', pill(d.healthPercent + ' %', w));
+      html += '<div class="meter"><div style="width:' + Math.min(d.healthPercent, 100) + '%"></div></div>';
+    }
+    if (d.designCapacity) html += baris('Kapasitas desain', esc(d.designCapacity) + ' mWh');
+    if (d.fullChargeCapacity) html += baris('Kapasitas penuh', esc(d.fullChargeCapacity) + ' mWh');
+    if (d.cycleCount) html += baris('Siklus charge', esc(d.cycleCount));
+    if (d.reportPath) html += '<div class="info">Laporan lengkap: ' + esc(d.reportPath) + '</div>';
+    $('isi-baterai').innerHTML = html;
+  } catch (e) { set('isi-baterai', e.message, 'kosong gagal'); }
+}
+
+/* ---------- 3. disk ---------- */
+async function muatDisk() {
+  sibuk('isi-disk', 'Memeriksa…');
+  try {
+    const d = await api('/api/disk');
+    let html = '';
+    (d.disks || []).forEach(k => {
+      const h = (k.health || '').toLowerCase();
+      const sehat = h === 'healthy' || h === 'ok';
+      html += baris(k.model || 'Disk', pill(k.mediaType + ' · ' + (sehat ? 'Healthy' : (k.health || '–')), sehat ? 'hijau' : 'merah'));
+      html += baris('Kapasitas', fmt(k.sizeBytes));
+      if (k.temperatureC != null) html += baris('Suhu', pill(k.temperatureC + ' °C', warnaSuhu(k.temperatureC)));
+      if (k.wear != null) html += baris('Keausan', pill(k.wear + ' %', k.wear > 80 ? 'merah' : (k.wear > 50 ? 'kuning' : 'hijau')));
+      if (k.powerOnHours != null) html += baris('Jam nyala', esc(k.powerOnHours) + ' jam');
+    });
+    if (html) html += '<div class="info">Suhu dan keausan hanya dilaporkan sebagian firmware.</div>';
+    $('isi-disk').innerHTML = html || '<span class="kosong">Tidak ada data disk.</span>';
+  } catch (e) { set('isi-disk', e.message, 'kosong gagal'); }
+}
+
+/* ---------- 4. CPU ---------- */
+async function muatCpu() {
+  try {
+    const d = await api('/api/cpu');
+    let html = '';
+    const baca = (d.readings || []);
+    if (!baca.length) {
+      html = '<div class="kosong">Sensor suhu tidak dilaporkan lewat WMI di PC ini. Yang bisa dicoba:' +
+        '<br>· Jalankan dashboard sebagai Administrator, sensor thermal butuh akses lebih' +
+        '<br>· Pasang driver OEM laptop, sensor sering disembunyikan di Pengaturan Firmware' +
+        '<br>· Alternatif gratis yang selalu bisa baca: HWiNFO64 / Core Temp</div>';
+    } else {
+      baca.forEach(b => { html += baris(b.Source, pill(b.Celsius + ' °C', warnaSuhu(b.Celsius))); });
+      html += '<div class="info">Di bawah 60 °C aman, 60-80 °C hangat, di atas 80 °C perlu cek kipas dan thermal paste.</div>';
+    }
+    if (d.cpuLoad != null) {
+      html += baris('Beban CPU', pill(d.cpuLoad + ' %', d.cpuLoad > 85 ? 'merah' : (d.cpuLoad > 60 ? 'kuning' : 'hijau')));
+    }
+    $('isi-cpu').innerHTML = html;
+  } catch (e) { set('isi-cpu', e.message, 'kosong gagal'); }
+}
+setInterval(() => { if (!document.hidden) muatCpu(); }, 5000);
+
+/* ---------- 5. summary ---------- */
+async function muatSummary() {
+  try {
+    const s = await api('/api/summary');
+    let html = baris('Sistem', esc((s.os || '–') + ' (' + (s.arch || '–') + ')'));
+    html += baris('Komputer', esc([s.manufacturer, s.model].filter(Boolean).join(' ') || '–'));
+    html += baris('CPU', esc(s.cpuName || '–'));
+    html += baris('Core / thread', (s.cores ?? '–') + ' / ' + (s.threads ?? '–'));
+    if (s.ramTotalBytes) {
+      const pct = s.ramUsedBytes / s.ramTotalBytes * 100;
+      html += baris('RAM terpakai', fmt(s.ramUsedBytes) + ' / ' + fmt(s.ramTotalBytes) + ' (' + pct.toFixed(0) + '%)');
+      html += '<div class="meter"><div style="width:' + Math.min(pct, 100) + '%"></div></div>';
+    }
+    html += baris('Uptime', esc(s.uptimeText || '–'));
+    if (s.batteryPresent) html += baris('Baterai', (s.batteryPercent ?? '–') + ' %');
+    if ((s.topProcesses || []).length) {
+      html += '<div class="info">RAM terbesar: ' + esc(s.topProcesses.map(p => p.name).join(', ')) + '</div>';
+    }
+    $('isi-summary').innerHTML = html;
+  } catch (e) { set('isi-summary', e.message, 'kosong gagal'); }
+}
+
+/* ---------- 6. browser ---------- */
+$('btn-browser').addEventListener('click', async () => {
+  if (!konfirmasi('Bersihkan cache Chrome, Edge, dan Firefox?')) return;
+  const b = $('btn-browser'); b.disabled = true;
+  sibuk('browser-status', 'Membersihkan cache browser…');
+  try {
+    const j = await api('/api/clean-browser', { method: 'POST' });
+    hasil('browser-status', 'Dibebaskan ' + fmt(j.freedBytes) + (j.failedCount ? ' (' + j.failedCount + ' file terkunci)' : ''), true);
+  } catch (e) { hasil('browser-status', e.message, false); }
+  b.disabled = false;
+});
+
+/* ---------- 7. startup ---------- */
+async function muatStartup() {
+  sibuk('isi-startup', 'Memuat…');
+  try {
+    const d = await api('/api/startup');
+    const items = d.items || [];
+    $('jumlah-startup').textContent = items.length ? items.length + ' item' : '';
+    if (!items.length) { set('isi-startup', 'Tidak ada aplikasi startup terdaftar.', 'kosong'); return; }
+    let html = '';
+    items.forEach(it => {
+      const target = it.type === 'Reg' ? 'Reg|' + it.keyPath + '|' + it.valueName : 'File|' + it.filePath;
+      const cmd = (it.command || '').length > 52 ? (it.command || '').slice(0, 49) + '…' : (it.command || '');
+      html += '<label class="pilih"><input type="checkbox" data-target="' + esc(target) + '">' +
+        '<span><span>' + esc(it.name || '(tanpa nama)') + '</span><br>' +
+        '<span class="nilai" style="text-align:left">' + esc('[' + it.type + '] ' + cmd) + '</span></span></label>';
+    });
+    $('isi-startup').innerHTML = html;
+    $('isi-startup').scrollTop = 0;
+  } catch (e) { set('isi-startup', e.message, 'kosong gagal'); }
+}
+$('btn-startup-del').addEventListener('click', async () => {
+  const targets = Array.from($('isi-startup').querySelectorAll('input:checked')).map(c => c.dataset.target);
+  if (!targets.length) { set('startup-status', 'Centang dulu item yang mau dinonaktifkan.', 'status'); return; }
+  if (!konfirmasi('Nonaktifkan ' + targets.length + ' item startup?')) return;
+  const btn = $('btn-startup-del'); btn.disabled = true;
+  sibuk('startup-status', 'Menonaktifkan ' + targets.length + ' item (backup ke logs\\backup)…');
+  try {
+    const j = await api('/api/disable-startup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targets }) });
+    const ok = (j.results || []).filter(r => r.ok).length;
+    const gagal = (j.results || []).filter(r => !r.ok).length;
+    hasil('startup-status', ok + ' dinonaktifkan' + (gagal ? ' · ' + gagal + ' gagal' : '') +
+      '. Dikembalikan manual dari file .reg di logs\\backup.', ok > 0);
+    muatStartup();
+  } catch (e) { hasil('startup-status', e.message, false); }
+  btn.disabled = false;
+});
+
+/* ---------- 8. leftover ---------- */
+async function muatLeftover() {
+  sibuk('isi-leftover', 'Memindai folder program dan registry…');
+  try {
+    const d = await api('/api/leftover');
+    const cands = d.candidates || [];
+    const broken = d.broken || [];
+    let html = '';
+    if (!cands.length && !broken.length) {
+      html = '<div class="baris"><span>Sistem bersih</span>' + pill('tidak ada sisa folder', 'hijau') + '</div>';
+    } else {
+      if (cands.length) {
+        let total = 0; cands.forEach(c => total += (c.sizeBytes || 0));
+        html += '<div class="info">' + cands.length + ' folder diduga sisa aplikasi, total ' + fmt(total) + '</div>';
+        cands.forEach(c => {
+          html += '<label class="pilih"><input type="checkbox" data-path="' + esc(c.path) + '">' +
+            '<span><span>' + esc(c.name) + '</span><br><span class="nilai" style="text-align:left">' + fmt(c.sizeBytes) + '</span></span></label>';
+        });
+      }
+      if (broken.length) {
+        html += '<div class="info">' + broken.length + ' entri uninstall mati, uninstaller sudah hilang:</div>';
+        broken.forEach(b => {
+          html += '<label class="pilih"><input type="checkbox" data-reg="' + esc(b.regPsPath) + '">' +
+            '<span><span>[Registry] ' + esc(b.name) + '</span><br>' +
+            '<span class="nilai" style="text-align:left">' + esc(b.uninstallExe || '') + '</span></span></label>';
+        });
+      }
+    }
+    $('isi-leftover').innerHTML = html;
+    $('isi-leftover').scrollTop = 0;
+    $('btn-leftover-del').disabled = false;
+  } catch (e) { set('isi-leftover', e.message, 'kosong gagal'); }
+}
+$('btn-leftover-scan').addEventListener('click', muatLeftover);
+$('btn-leftover-del').addEventListener('click', async () => {
+  const paths = Array.from($('isi-leftover').querySelectorAll('[data-path]:checked')).map(c => c.dataset.path);
+  const regKeys = Array.from($('isi-leftover').querySelectorAll('[data-reg]:checked')).map(c => c.dataset.reg);
+  if (!paths.length && !regKeys.length) { set('leftover-status', 'Centang dulu item yang mau dihapus.', 'status'); return; }
+  const ket = paths.length
+    ? 'Pindahkan ' + paths.length + ' folder ke Recycle Bin' + (regKeys.length ? ' dan bersihkan ' + regKeys.length + ' entri registry' : '') + '?'
+    : 'Bersihkan ' + regKeys.length + ' entri registry?';
+  if (!konfirmasi(ket)) return;
+  $('btn-leftover-del').disabled = true;
+  sibuk('leftover-status', 'Memproses ' + (paths.length + regKeys.length) + ' item…');
+  try {
+    const j = await api('/api/delete-leftover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths, regKeys }) });
+    const semua = (j.deleted || []).concat((j.regRemoved || []));
+    const ok = semua.filter(r => r.ok).length;
+    hasil('leftover-status', ok + ' berhasil diproses' + (semua.length - ok ? ' · ' + (semua.length - ok) + ' gagal' : ''), ok > 0);
+    muatLeftover();
+  } catch (e) { hasil('leftover-status', e.message, false); }
+  $('btn-leftover-del').disabled = false;
+});
+
+/* ---------- 9. power ---------- */
+async function muatPower() {
+  sibuk('isi-power', 'Memuat…');
+  try {
+    const d = await api('/api/power');
+    const plans = d.plans || [];
+    if (!plans.length) { set('isi-power', 'Tidak bisa membaca daftar power plan.', 'kosong'); return; }
+    $('isi-power').innerHTML = plans.map(p => baris(p.name,
+      p.active ? pill('aktif', 'hijau')
+        : '<button class="tombol" data-guid="' + esc(p.guid) + '">Aktifkan</button>')).join('');
+    $('isi-power').querySelectorAll('button[data-guid]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const j = await api('/api/set-power', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ guid: btn.dataset.guid }) });
+        if (j.ok) { hasil('power-status', 'Skema daya diganti ke ' + btn.closest('.baris').querySelector('span').textContent + '.', true); muatPower(); }
+        else hasil('power-status', j.error || 'Gagal mengganti skema daya.', false);
+      });
+    });
+  } catch (e) { set('isi-power', e.message, 'kosong gagal'); }
+}
+
+/* ---------- lain-lain ---------- */
+$('btn-open-logs').addEventListener('click', () => fetch('/api/open-logs'));
+$('btn-stop').addEventListener('click', async () => {
+  if (!window.confirm('Hentikan server dashboard? Tampilan di tab ini akan berhenti diperbarui.')) return;
+  await fetch('/api/shutdown', { method: 'POST' });
+  document.body.innerHTML = '<div style="display:flex;height:100vh;align-items:center;justify-content:center;color:#97a2b5;">Server dashboard dihentikan. Tutup tab ini.</div>';
+});
+
+/* ---------- init ---------- */
+muatBadge(); muatJunk(); muatBaterai(); muatDisk(); muatCpu(); muatSummary(); muatStartup(); muatPower();
+</script>
+</body>
+</html>
